@@ -77,7 +77,7 @@ def get_data_window(dataDir, window, batch_size, test_size, is_demo=False):
 
                 offset = 0
                 if not is_demo:
-                    offset = int((len(lines) - window) / 1.5)
+                    offset = int((len(lines) - window) / 3)
                 for i in range(len(lines) - window - offset):
                     tmp = lines[i:i+window]
                     x.append([item for sublist in tmp for item in sublist])
@@ -91,6 +91,42 @@ def get_data_window(dataDir, window, batch_size, test_size, is_demo=False):
         return DataLoader(data), X_scaler, y_scaler
     train, test = train_test_split(data, test_size=test_size, shuffle=True)
     return DataLoader(train, batch_size=batch_size), DataLoader(test), X_scaler, y_scaler
+
+def get_data_timeseries(dataDir, sequence, batch_size, test_size, is_demo=False, stock=None):
+    data = []
+    scaler_lst = []
+    print('grabbing data ...', flush=True)
+    for root, dirs, files in os.walk(dataDir):
+        for name in ['amzn.us.txt']:
+            fname = os.path.join(root, name)
+            with open(fname, 'r') as f:
+                _ = f.readline()
+                lines = f.readlines()
+                lines = format_line(lines)
+                scaler = MinMaxScaler()
+                scaler.fit_transform(lines)
+                scaler_lst.append(scaler)
+
+                x, y, tmp = [], [], []
+                offset = 0
+                if not is_demo:
+                    lines = lines[:int(len(lines)/1.2)]
+                else:
+                    lines = lines[int(len(lines)/1.2):]
+                    
+                for i in range(len(lines) - sequence - offset):
+                    tmp = lines[i:i+sequence]
+                    x.append(scaler.transform(tmp))
+
+                    y.append(scaler.transform(lines[i+1:i+sequence+1]))
+                for i in range(len(x)):
+                    data.append((x[i], y[i]))
+    
+    if is_demo:
+        return DataLoader(data), scaler_lst 
+    train, test = train_test_split(data, test_size=test_size, shuffle=True)
+    return DataLoader(train, batch_size=batch_size), DataLoader(test), scaler_lst
+    
 
 if __name__ == '__main__':
     train, test, X_scaler, y_scaler = get_data_window('D:/Documents/PythonTest/stockpredict/data/Stocks', 20, 100, 0.2)

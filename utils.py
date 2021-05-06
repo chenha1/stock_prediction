@@ -7,7 +7,7 @@ def plot(original, predict):
     fig = plt.figure()
     fig.subplots_adjust(hspace=0.2, wspace=0.2)
 
-    plt.subplot(1, 2, 1)
+    plt.subplot(1, 1, 1)
     ax = sns.lineplot(x = original.index, y = original[3], label="Data", color='royalblue')
     ax = sns.lineplot(x = predict.index, y = predict[3], label="Training Prediction", color='tomato')
     ax.set_title('Stock price', size = 14, fontweight='bold')

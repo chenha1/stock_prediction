@@ -7,35 +7,22 @@ if torch.cuda.is_available() and False:
 else:
     device = torch.device('cpu')
 
-# class Model(nn.Module):
-#     def __init__(self, inputSize, outputSize, embeddingSize, hiddenSize, layers):
-#         super(Model, self).__init__()
-#         self.outputSize = outputSize
-#         self.layers = layers
-#         self.hiddenSize = hiddenSize
-
-#         # feed data into an embedding matrix 
-#         # self.embedding = nn.Embedding()
-
-#         # feed embedded data into lstm module
-#         # batch first = True ensures [batch, ...]
-#         embeddingSize = inputSize
-#         self.lstm = nn.LSTM(embeddingSize, hiddenSize, layers, batch_first=True)
-#         self.fc = nn.Linear(hiddenSize, outputSize)
-    
-#     def forward(self, x, hidden):
-#         batchSize, seqLen, features = x.shape
+class LSTM(nn.Module):
+    def __init__(self, input_dim, hidden_dim, num_layers, output_dim):
+        super(LSTM, self).__init__()
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
         
-#         out, hidden = self.lstm(x, hidden)
-#         out = self.fc(out)
-#         out = out.view(batchSize, seqLen, features)
-#         return out, hidden
-    
-#     def init_hidden(self, batchSize):
-#         weight = next(self.parameters()).data 
-#         hidden = (weight.new(self.layers, batchSize, self.hiddenSize).zero_().to(device),
-#                     weight.new(self.layers, batchSize, self.hiddenSize).zero_().to(device))
-#         return hidden
+        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, output_dim)
+
+    def forward(self, x, h0=None, c0=None):
+        if h0 != None and c0 != None:
+            out, (hn, cn) = self.lstm(x, (h0, c0))
+        else:
+            out, (hn, cn) = self.lstm(x)
+        out = self.fc(out) 
+        return out
 
 class Linear(nn.Module):
     def __init__(self, input_size, output_size, hidden_size, num_layers):
